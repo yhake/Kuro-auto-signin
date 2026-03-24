@@ -1,0 +1,68 @@
+name: Kuro Auto Signin
+
+on:
+  schedule:
+    # 每天 UTC 时间 17:00 运行（北京时间 01:00）
+    - cron: '0 17 * * *'
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  signin:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install . -t .
+          # 如果上面安装有问题，用下面这个
+          # pip install requests pyyaml pytz httpx
+
+      - name: Create config directory
+        run: mkdir -p config
+
+      - name: Create config from Secrets
+        run: |
+          # 创建用户配置文件
+          if [ -n "${{ secrets.KURO_CONFIG }}" ]; then
+            echo "${{ secrets.KURO_CONFIG }}" > config/default.yaml
+            echo "✅ 用户配置文件已创建"
+          else
+            echo "❌ 未找到 KURO_CONFIG Secret，请添加"
+            exit 1
+          fi
+          
+          # 创建推送配置文件（可选）
+          if [ -n "${{ secrets.PUSH_CONFIG }}" ]; then
+            echo "${{ secrets.PUSH_CONFIG }}" > config/push.ini
+            echo "✅ 推送配置文件已创建"
+          fi
+          
+          # 列出配置文件（调试用，不会显示内容）
+          ls -la config/
+
+      - name: Run sign-in
+        run: python main.py
+
+      - name: Upload logs (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: signin-logs-failed
+          path: logs/
+          retention-days: 7
+
+      - name: Upload logs (always)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: signin-logs-${{ github.run_id }}
+          path: logs/
+          retention-days: 3
