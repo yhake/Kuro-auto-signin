@@ -21,9 +21,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install . -t .
-          # 如果上面安装有问题，用下面这个
-          # pip install requests pyyaml pytz httpx
+          pip install requests pyyaml pytz httpx
 
       - name: Create config directory
         run: mkdir -p config
