@@ -144,3 +144,35 @@ def get_game_user_id(
 
 if __name__ == "__main__":
     pass
+
+
+def get_game_user_ids(token: str, game_id: int, devcode: str, distinct_id: str) -> list:
+    """
+    获取绑定游戏账号的所有角色ID
+    :param token: 用户的 token
+    :param game_id: 游戏 id (战双 = 2, 鸣潮 = 3)
+    :param devcode: 设备代码
+    :param distinct_id: 唯一标识符
+    :return: 角色ID列表，若无则返回空列表
+    """
+    from http_client import KuroHttpClient
+    from constants import API
+
+    try:
+        client = KuroHttpClient(token, devcode, distinct_id)
+        response = client.user_info_post(
+            API.USER_ROLE_LIST, data={"gameId": str(game_id)}, raise_on_error=False
+        )
+
+        if response.is_success() and response.data:
+            roles = response.data
+            # 取出所有角色的 roleId，放在一个列表里
+            role_ids = [role.get("roleId") for role in roles if role.get("roleId")]
+            print(f"获取游戏{game_id}角色列表成功，共 {len(role_ids)} 个角色")
+            return role_ids
+
+        print(f"获取绑定游戏账号列表失败: {response.message}")
+        return []
+    except Exception as e:
+        print(f"请求失败: {e}")
+        return []
