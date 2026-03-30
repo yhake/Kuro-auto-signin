@@ -123,7 +123,7 @@ class SignInManager:
                             month=current_month,
                             auto_replenish=config.auto_replenish_sign,
                         )
-                        messages.append(result.message))
+                        messages.append(result.message)
 
                 # 论坛签到
                 forum_signer = ForumSignIn(client)
