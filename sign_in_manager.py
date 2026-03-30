@@ -100,28 +100,30 @@ class SignInManager:
                 current_month = datetime.datetime.now().strftime("%m")
 
                 # 鸣潮签到
-                wuwa_role_id = config.get_game_role_id("3")
-                if wuwa_role_id:
-                    result = game_signer.sign_in(
-                        game_type=GameType.WUWA,
-                        role_id=wuwa_role_id,
-                        user_id=config.get_user_id(),
-                        month=current_month,
-                        auto_replenish=config.auto_replenish_sign,
-                    )
-                    messages.append(result.message)
+                wuwa_role_ids = config.game_info.get("wwroleIds", [])  # 获取角色ID列表
+                for wuwa_role_id in wuwa_role_ids:
+                    if wuwa_role_id:
+                        result = game_signer.sign_in(
+                            game_type=GameType.WUWA,
+                            role_id=wuwa_role_id,
+                            user_id=config.get_user_id(),
+                            month=current_month,
+                            auto_replenish=config.auto_replenish_sign,
+                        )
+                        messages.append(result.message)
 
                 # 战双签到
-                pgr_role_id = config.get_game_role_id("2")
-                if pgr_role_id:
-                    result = game_signer.sign_in(
-                        game_type=GameType.PGR,
-                        role_id=pgr_role_id,
-                        user_id=config.get_user_id(),
-                        month=current_month,
-                        auto_replenish=config.auto_replenish_sign,
-                    )
-                    messages.append(result.message)
+                pgr_role_ids = config.game_info.get("eeeroleIds", [])  # 获取角色ID列表
+                for pgr_role_id in pgr_role_ids:
+                    if pgr_role_id:
+                        result = game_signer.sign_in(
+                            game_type=GameType.PGR,
+                            role_id=pgr_role_id,
+                            user_id=config.get_user_id(),
+                            month=current_month,
+                            auto_replenish=config.auto_replenish_sign,
+                        )
+                        messages.append(result.message))
 
                 # 论坛签到
                 forum_signer = ForumSignIn(client)
