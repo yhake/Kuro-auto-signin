@@ -171,8 +171,8 @@ def get_game_user_ids(token: str, game_id: int, devcode: str, distinct_id: str) 
             log_info(f"获取游戏{game_id}角色列表成功，共 {len(role_ids)} 个角色")
             return role_ids
 
-        log_info(f"获取绑定游戏账号列表失败: {response.message}")
+        log_error(f"获取绑定游戏账号列表失败: {response.message}")
         return []
     except Exception as e:
-        log_info(f"请求失败: {e}")
+        log_error(f"请求失败: {e}")
         return []
