@@ -199,9 +199,10 @@ class ConfigManager:
                 log_error(f"获取用户ID失败: {user_name}")
                 return False
 
-            # 获取游戏角色ID
-            wuwa_role_id = get_game_user_id(token, 3, devcode, distinct_id)  # 鸣潮
-            pgr_role_id = get_game_user_id(token, 2, devcode, distinct_id)  # 战双
+            # 获取所有鸣潮角色ID
+            wuwa_role_ids = get_game_user_ids(token, 3, devcode, distinct_id)
+            # 获取所有战双角色ID
+            pgr_role_ids = get_game_user_ids(token, 2, devcode, distinct_id)
 
             if wuwa_role_id:
                 config.game_info["wwroleId"] = wuwa_role_id
