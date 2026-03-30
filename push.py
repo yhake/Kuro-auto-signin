@@ -279,50 +279,64 @@ def wecom(send_title, push_message):
         log_error(f"企业微信推送失败: {e}")
 
 
-# 企业微信机器人（卡片格式）
+# 企业微信机器人（Markdown格式）
 def wecomrobot(send_title, push_message):
     try:
         from datetime import datetime, timezone, timedelta
+        
+        api_url = cfg.get("wecomrobot", "url")
+        if not api_url:
+            log_info("企业微信 Webhook 未配置")
+            return
         
         # 获取东八区时间
         tz = timezone(timedelta(hours=8))
         current_time = datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
         
-        # 企业微信卡片消息
-        card_data = {
-            "msgtype": "template_card",
-            "template_card": {
-                "card_type": "text_notice",
-                "source": {
-                    "icon_url": "https://web-static.kurobbs.com/resource/prod/assets/main-img-Bp08JrXL.png",
-                    "desc": "Kuro-AutoSignin",
-                    "desc_color": 0
-                },
-                "main_title": {
-                    "title": send_title,
-                    "desc": current_time
-                },
-                "sub_title_text": push_message,
-                "jump_list": [
-                    {
-                        "type": 1,
-                        "title": "查看仓库",
-                        "url": "https://github.com/yhake/Kuro-auto-signin"
-                    }
-                ],
-                "card_action": {
-                    "type": 1,
-                    "url": "https://github.com/yhake/Kuro-auto-signin"
-                }
+        # 状态图标
+        if "成功" in send_title:
+            status_icon = "✅"
+        elif "失败" in send_title:
+            status_icon = "❌"
+        else:
+            status_icon = "📢"
+        
+        # 获取仓库链接
+        repo_url = "https://github.com/yhake/Kuro-auto-signin"
+        
+        # 处理消息内容（限制长度）
+        message_content = push_message.strip()
+        if len(message_content) > 2000:
+            message_content = message_content[:2000] + "\n\n... (内容过长，请查看日志)"
+        
+        # 构建 Markdown 消息
+        markdown_content = f"""## {status_icon} {send_title}
+
+{message_content}
+
+---
+**⏰ 时间**：{current_time}
+
+[🔗 查看仓库]({repo_url}) | [📋 查看日志]({repo_url}/actions)"""
+        
+        markdown_data = {
+            "msgtype": "markdown",
+            "markdown": {
+                "content": markdown_content
             }
         }
         
+        # 添加 @ 提醒（如果配置了手机号）
+        mobile = cfg.get("wecomrobot", "mobile", fallback=None)
+        if mobile:
+            markdown_data["markdown"]["mentioned_mobile_list"] = [mobile]
+        
         rep = http.post(
-            url=cfg.get("wecomrobot", "url"),
+            url=api_url,
             headers={"Content-Type": "application/json; charset=utf-8"},
-            json=card_data
+            json=markdown_data
         ).json()
-        log_info(f"企业微信机器人推送结果：{rep.get('errmsg')}")
+        log_info(f"企业微信机器人推送结果：{rep.get('errmsg', '成功')}")
     except Exception as e:
         log_error(f"企业微信机器人推送失败: {e}")
 
@@ -388,7 +402,10 @@ def feishubot(send_title, push_message):
         tz = timezone(timedelta(hours=8))
         current_time = datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
         
-        # 卡片格式，末尾加上时间和链接
+        # 获取仓库链接
+        repo_url = "https://github.com/yhake/Kuro-auto-signin"
+        
+        # 卡片格式，绿色头部
         rep = http.post(
             url=api_url,
             headers={"Content-Type": "application/json; charset=utf-8"},
@@ -404,7 +421,7 @@ def feishubot(send_title, push_message):
                             "tag": "plain_text",
                             "content": send_title
                         },
-                        "template": "blue"
+                        "template": "green"
                     },
                     "elements": [
                         {
@@ -431,9 +448,18 @@ def feishubot(send_title, push_message):
                                     "tag": "button",
                                     "text": {
                                         "tag": "plain_text",
-                                        "content": "查看仓库"
+                                        "content": "🔗 查看仓库"
                                     },
-                                    "url": "https://github.com/yhake/Kuro-auto-signin",
+                                    "url": repo_url,
+                                    "type": "default"
+                                },
+                                {
+                                    "tag": "button",
+                                    "text": {
+                                        "tag": "plain_text",
+                                        "content": "📋 查看日志"
+                                    },
+                                    "url": f"{repo_url}/actions",
                                     "type": "default"
                                 }
                             ]
