@@ -11,7 +11,7 @@ from models import (
     UserConfig,
     # ConfigException
 )
-from tools import get_user_info_by_token, get_game_user_id
+from tools import get_user_info_by_token, get_game_user_id, get_game_user_ids
 
 
 class ConfigManager:
@@ -82,14 +82,14 @@ class ConfigManager:
                 # 保存一下，让文件也更新
                 with open(config_path, "w", encoding="utf-8") as f:
                     yaml.safe_dump(data, f, allow_unicode=True, default_flow_style=False)
-                print(f"已自动将 {user_name} 的 wwroleId 转换为列表格式")
+                log_info(f"已自动将 {user_name} 的 wwroleId 转换为列表格式")
 
             if "eeeroleId" in data and "eeeroleIds" not in data:
                 data["eeeroleIds"] = [data["eeeroleId"]] if data["eeeroleId"] else []
                 del data["eeeroleId"]
                 with open(config_path, "w", encoding="utf-8") as f:
                     yaml.safe_dump(data, f, allow_unicode=True, default_flow_style=False)
-                print(f"已自动将 {user_name} 的 eeeroleId 转换为列表格式")
+                log_info(f"已自动将 {user_name} 的 eeeroleId 转换为列表格式")
 
             config = UserConfig.from_dict(user_name, data)
             log_debug(f"成功加载配置: {user_name}")
