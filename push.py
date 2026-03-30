@@ -7,7 +7,7 @@ import time
 import base64
 import urllib
 import hashlib
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import sys
 from configparser import ConfigParser, NoOptionError
 from log import (
@@ -279,19 +279,48 @@ def wecom(send_title, push_message):
         log_error(f"企业微信推送失败: {e}")
 
 
-# 企业微信机器人
+# 企业微信机器人（卡片格式）
 def wecomrobot(send_title, push_message):
     try:
-        rep = http.post(
-            url=f'{cfg.get("wecomrobot", "url")}',
-            headers={"Content-Type": "application/json; charset=utf-8"},
-            json={
-                "msgtype": "text",
-                "text": {
-                    "content": send_title + "\r\n" + push_message,
-                    "mentioned_mobile_list": [f'{cfg.get("wecomrobot", "mobile")}'],
+        from datetime import datetime, timezone, timedelta
+        
+        # 获取东八区时间
+        tz = timezone(timedelta(hours=8))
+        current_time = datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
+        
+        # 企业微信卡片消息
+        card_data = {
+            "msgtype": "template_card",
+            "template_card": {
+                "card_type": "text_notice",
+                "source": {
+                    "icon_url": "https://web-static.kurobbs.com/resource/prod/assets/main-img-Bp08JrXL.png",
+                    "desc": "Kuro-AutoSignin",
+                    "desc_color": 0
                 },
-            },
+                "main_title": {
+                    "title": send_title,
+                    "desc": current_time
+                },
+                "sub_title_text": push_message,
+                "jump_list": [
+                    {
+                        "type": 1,
+                        "title": "查看仓库",
+                        "url": "https://github.com/yhake/Kuro-auto-signin"
+                    }
+                ],
+                "card_action": {
+                    "type": 1,
+                    "url": "https://github.com/yhake/Kuro-auto-signin"
+                }
+            }
+        }
+        
+        rep = http.post(
+            url=cfg.get("wecomrobot", "url"),
+            headers={"Content-Type": "application/json; charset=utf-8"},
+            json=card_data
         ).json()
         log_info(f"企业微信机器人推送结果：{rep.get('errmsg')}")
     except Exception as e:
@@ -346,18 +375,71 @@ def dingrobot(send_title, push_message):
         log_error(f"钉钉群机器人推送失败: {e}")
 
 
-# 飞书机器人
+# 飞书机器人（卡片格式）
 def feishubot(send_title, push_message):
     try:
+        from datetime import datetime, timezone, timedelta
+        
         api_url = cfg.get(
             "feishubot", "webhook"
         )  # https://open.feishu.cn/open-apis/bot/v2/hook/XXX
+        
+        # 获取东八区时间
+        tz = timezone(timedelta(hours=8))
+        current_time = datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
+        
+        # 卡片格式，末尾加上时间和链接
         rep = http.post(
             url=api_url,
             headers={"Content-Type": "application/json; charset=utf-8"},
             json={
-                "msg_type": "text",
-                "content": {"text": send_title + "\r\n" + push_message},
+                "msg_type": "interactive",
+                "card": {
+                    "config": {
+                        "wide_screen_mode": True,
+                        "enable_forward": True
+                    },
+                    "header": {
+                        "title": {
+                            "tag": "plain_text",
+                            "content": send_title
+                        },
+                        "template": "blue"
+                    },
+                    "elements": [
+                        {
+                            "tag": "div",
+                            "text": {
+                                "tag": "lark_md",
+                                "content": push_message
+                            }
+                        },
+                        {
+                            "tag": "hr"
+                        },
+                        {
+                            "tag": "div",
+                            "text": {
+                                "tag": "lark_md",
+                                "content": f"⏰ {current_time}"
+                            }
+                        },
+                        {
+                            "tag": "action",
+                            "actions": [
+                                {
+                                    "tag": "button",
+                                    "text": {
+                                        "tag": "plain_text",
+                                        "content": "查看仓库"
+                                    },
+                                    "url": "https://github.com/yhake/Kuro-auto-signin",
+                                    "type": "default"
+                                }
+                            ]
+                        }
+                    ]
+                }
             },
         ).json()
         log_info(f"飞书机器人推送结果：{rep.get('msg')}")
@@ -518,4 +600,3 @@ def push(push_message):
 
 if __name__ == "__main__":
     push(f"推送验证{int(time.time())}")
-
