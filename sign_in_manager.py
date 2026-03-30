@@ -103,6 +103,7 @@ class SignInManager:
                 wuwa_role_ids = config.game_info.get("wwroleIds", [])  # 获取角色ID列表
                 for wuwa_role_id in wuwa_role_ids:
                     if wuwa_role_id:
+                        log_info(f"鸣潮角色ID: {wuwa_role_id}")
                         result = game_signer.sign_in(
                             game_type=GameType.WUWA,
                             role_id=wuwa_role_id,
@@ -116,6 +117,7 @@ class SignInManager:
                 pgr_role_ids = config.game_info.get("eeeroleIds", [])  # 获取角色ID列表
                 for pgr_role_id in pgr_role_ids:
                     if pgr_role_id:
+                        log_info(f"战双角色ID: {pgr_role_id}")
                         result = game_signer.sign_in(
                             game_type=GameType.PGR,
                             role_id=pgr_role_id,
