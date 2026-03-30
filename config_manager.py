@@ -75,6 +75,22 @@ class ConfigManager:
                 with open(config_path, "w", encoding="utf-8") as f:
                     yaml.safe_dump(data, f, allow_unicode=True, default_flow_style=False)
 
+            # 兼容旧配置文件：将单个角色 ID 转换为列表
+            if "wwroleId" in data and "wwroleIds" not in data:
+                data["wwroleIds"] = [data["wwroleId"]] if data["wwroleId"] else []
+                del data["wwroleId"]
+                # 保存一下，让文件也更新
+                with open(config_path, "w", encoding="utf-8") as f:
+                    yaml.safe_dump(data, f, allow_unicode=True, default_flow_style=False)
+                print(f"已自动将 {user_name} 的 wwroleId 转换为列表格式")
+
+            if "eeeroleId" in data and "eeeroleIds" not in data:
+                data["eeeroleIds"] = [data["eeeroleId"]] if data["eeeroleId"] else []
+                del data["eeeroleId"]
+                with open(config_path, "w", encoding="utf-8") as f:
+                    yaml.safe_dump(data, f, allow_unicode=True, default_flow_style=False)
+                print(f"已自动将 {user_name} 的 eeeroleId 转换为列表格式")
+
             config = UserConfig.from_dict(user_name, data)
             log_debug(f"成功加载配置: {user_name}")
             return config
@@ -204,10 +220,15 @@ class ConfigManager:
             # 获取所有战双角色ID
             pgr_role_ids = get_game_user_ids(token, 2, devcode, distinct_id)
 
-            if wuwa_role_id:
-                config.game_info["wwroleId"] = wuwa_role_id
-            if pgr_role_id:
-                config.game_info["eeeroleId"] = pgr_role_id
+            if wuwa_role_ids:
+                config.game_info["wwroleIds"] = wuwa_role_ids
+            else:
+                config.game_info["wwroleIds"] = []
+
+            if pgr_role_ids:
+                config.game_info["eeeroleIds"] = pgr_role_ids
+            else:
+                config.game_info["eeeroleIds"] = []
 
             # 标记为已完成
             config.completed = True
