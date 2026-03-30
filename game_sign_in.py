@@ -122,7 +122,7 @@ class GameSignIn:
 
             if response.code == ErrorCode.SUCCESS.value:
                 reward = self.get_sign_reward(game_type, role_id, user_id)
-                message = f"{game_type.name_zh} 补签成功"
+                message = f"{game_type.name_zh} 角色{role_id} 补签成功"
                 if reward:
                     message += f"，补签奖励: {reward}"
                 log_info(message)
@@ -132,12 +132,12 @@ class GameSignIn:
                     details={"reward": reward},
                 )
             else:
-                message = f"{game_type.name_zh} 补签失败: {response.message}"
+                message = f"{game_type.name_zh} 角色{role_id} 补签失败: {response.message}"
                 log_error(message)
                 return SignInResult(status=ResponseStatus.FAILED, message=message)
 
         except Exception as e:
-            message = f"{game_type.name_zh} 补签失败: {str(e)}"
+            message = f"{game_type.name_zh} 角色{role_id} 补签失败: {str(e)}"
             log_error(message)
             return SignInResult(status=ResponseStatus.FAILED, message=message)
 
@@ -175,7 +175,7 @@ class GameSignIn:
             # 处理签到结果
             if response.code == ErrorCode.SUCCESS.value:
                 reward = self.get_sign_reward(game_type, role_id, user_id)
-                message = f"{game_type.name_zh} 签到成功"
+                message = f"{game_type.name_zh} 角色{role_id} 签到成功"
                 if reward:
                     message += f"，签到奖励: {reward}"
                 log_info(message)
@@ -187,7 +187,7 @@ class GameSignIn:
 
             elif response.code == ErrorCode.ALREADY_SIGNED.value:
                 reward = self.get_sign_reward(game_type, role_id, user_id)
-                message = f"{game_type.name_zh} 今天已签到"
+                message = f"{game_type.name_zh} 角色{role_id} 今天已签到"
                 if reward:
                     message += f"，签到奖励: {reward}"
                 log_info(message)
@@ -198,17 +198,17 @@ class GameSignIn:
                 )
 
             elif response.code == ErrorCode.USER_INFO_ERROR.value:
-                message = f"{game_type.name_zh} 签到报错：用户信息异常"
+                message = f"{game_type.name_zh} 角色{role_id} 签到报错：用户信息异常"
                 log_error(message)
                 raise UserInfoException(message)
 
             elif response.code == ErrorCode.LOGIN_EXPIRED.value:
-                message = f"{game_type.name_zh} 签到报错：登录已过期，请重新登录"
+                message = f"{game_type.name_zh} 角色{role_id} 签到报错：登录已过期，请重新登录"
                 log_error(message)
                 raise TokenExpiredException(message)
 
             else:
-                message = f"{game_type.name_zh} 签到失败: {response.message} (代码: {response.code})"
+                message = f"{game_type.name_zh} 角色{role_id} 签到失败: {response.message} (代码: {response.code})"
                 log_error(message)
                 return SignInResult(status=ResponseStatus.FAILED, message=message)
 
@@ -227,6 +227,6 @@ class GameSignIn:
             # 重新抛出这些异常，让上层处理
             raise
         except Exception as e:
-            message = f"{game_type.name_zh} 签到失败: {str(e)}"
+            message = f"{game_type.name_zh} 角色{role_id} 签到失败: {str(e)}"
             log_error(message)
             return SignInResult(status=ResponseStatus.FAILED, message=message)
